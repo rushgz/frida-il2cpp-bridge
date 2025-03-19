@@ -166,6 +166,12 @@ namespace Il2Cpp {
             return readNativeIterator(_ => Il2Cpp.exports.classGetMethods(this, _)).map(_ => new Il2Cpp.Method(_));
         }
 
+        @lazy
+        get visibility(): Visibility {
+            const flags = this.flags; // 假设 `flags` 属性包含可见性信息
+            return Il2Cpp.getVisibility(flags);
+        }
+
         /** Gets the name of the current class. */
         @lazy
         get name(): string {
@@ -316,10 +322,12 @@ namespace Il2Cpp {
             const inherited = [this.parent].concat(this.interfaces);
 
             return `\
-// ${this.assemblyName}
+// Dll : ${this.assemblyName}.dll\n\
+// Namespace: ${this.namespace}\n\
+${this.visibility} \
 ${this.isEnum ? `enum` : this.isStruct ? `struct` : this.isInterface ? `interface` : `class`} \
-${this.type.name}\
-${inherited ? ` : ${inherited.map(_ => _?.type.name).join(`, `)}` : ``}
+${this.name}\
+${inherited ? ` : ${inherited.map(_ => _?.name).join(`, `)}` : ``}
 {
     ${this.fields.join(`\n    `)}
     ${this.methods.join(`\n    `)}

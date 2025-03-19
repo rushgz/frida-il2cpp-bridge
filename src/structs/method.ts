@@ -101,6 +101,12 @@ namespace Il2Cpp {
             }
         }
 
+        @lazy
+        get visibility(): Visibility {
+            const flags = this.flags; // 假设 `flags` 属性包含可见性信息
+            return Il2Cpp.getVisibility(flags);
+        }
+
         /** Gets the name of this method. */
         @lazy
         get name(): string {
@@ -361,7 +367,7 @@ namespace Il2Cpp {
 
         /** */
         toString(): string {
-            return `\
+            return `${this.visibility} \
 ${this.isStatic ? `static ` : ``}\
 ${this.returnType.name} \
 ${this.name}\

@@ -49,7 +49,11 @@ namespace Il2Cpp {
 
         const destination = `${path}/${fileName}`;
         const file = new File(destination, "w");
-
+        var i = 0;
+        for (const assembly of Il2Cpp.domain.assemblies) {
+            file.write(`// Image: ${i++} ${assembly.image.name}\n`);
+        }
+        file.write("\n")
         for (const assembly of Il2Cpp.domain.assemblies) {
             inform(`dumping ${assembly.name}...`);
 
