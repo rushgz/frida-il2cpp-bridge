@@ -59,7 +59,7 @@ namespace Il2Cpp {
         @lazy
         get visibility(): Visibility {
             const flags = this.flags; // 假设 `flags` 属性包含可见性信息
-            return Il2Cpp.getVisibility(flags);
+            return Il2Cpp.getFieldVisibility(flags);
         }
 
         /** Gets the name of this field. */

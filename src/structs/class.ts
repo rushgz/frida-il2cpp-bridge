@@ -169,7 +169,13 @@ namespace Il2Cpp {
         @lazy
         get visibility(): Visibility {
             const flags = this.flags; // 假设 `flags` 属性包含可见性信息
-            return Il2Cpp.getVisibility(flags);
+            return Il2Cpp.getClassVisibility(flags);
+        }
+
+        @lazy
+        get modifier(): string {
+            const flags = this.flags; // 假设 `flags` 属性包含可见性信息
+            return Il2Cpp.getTypeModifiers(flags, this.isValueType, this.isEnum);
         }
 
         /** Gets the name of the current class. */
@@ -325,6 +331,7 @@ namespace Il2Cpp {
 // Dll : ${this.assemblyName}.dll\n\
 // Namespace: ${this.namespace}\n\
 ${this.visibility} \
+${this.modifier ? this.modifier :''}\
 ${this.isEnum ? `enum` : this.isStruct ? `struct` : this.isInterface ? `interface` : `class`} \
 ${this.name}\
 ${inherited ? ` : ${inherited.map(_ => _?.name).join(`, `)}` : ``}

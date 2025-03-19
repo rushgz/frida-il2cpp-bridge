@@ -1,21 +1,180 @@
-// Visibility.ts
-namespace Il2Cpp{
+namespace Il2Cpp {
+    const ATTRIBUTES = {
+        // 类型可见性掩码
+        VISIBILITY_MASK: 0x00000007,       // TYPE_ATTRIBUTE_VISIBILITY_MASK
+        NOT_PUBLIC: 0x00000000,            // TYPE_ATTRIBUTE_NOT_PUBLIC
+        PUBLIC: 0x00000001,                // TYPE_ATTRIBUTE_PUBLIC
+        NESTED_PUBLIC: 0x00000002,         // TYPE_ATTRIBUTE_NESTED_PUBLIC
+        NESTED_PRIVATE: 0x00000003,        // TYPE_ATTRIBUTE_NESTED_PRIVATE
+        NESTED_FAMILY: 0x00000004,         // TYPE_ATTRIBUTE_NESTED_FAMILY
+        NESTED_ASSEMBLY: 0x00000005,       // TYPE_ATTRIBUTE_NESTED_ASSEMBLY
+        NESTED_FAM_AND_ASSEM: 0x00000006,  // TYPE_ATTRIBUTE_NESTED_FAM_AND_ASSEM
+        NESTED_FAM_OR_ASSEM: 0x00000007,   // TYPE_ATTRIBUTE_NESTED_FAM_OR_ASSEM
+
+        // 布局掩码
+        LAYOUT_MASK: 0x00000018,           // TYPE_ATTRIBUTE_LAYOUT_MASK
+        AUTO_LAYOUT: 0x00000000,           // TYPE_ATTRIBUTE_AUTO_LAYOUT
+        SEQUENTIAL_LAYOUT: 0x00000008,     // TYPE_ATTRIBUTE_SEQUENTIAL_LAYOUT
+        EXPLICIT_LAYOUT: 0x00000010,       // TYPE_ATTRIBUTE_EXPLICIT_LAYOUT
+
+        // 导入和序列化
+        IMPORT: 0x00001000,                // TYPE_ATTRIBUTE_IMPORT
+        SERIALIZABLE: 0x00002000,          // TYPE_ATTRIBUTE_SERIALIZABLE
+
+        // 字符串格式掩码
+        STRING_FORMAT_MASK: 0x00030000,    // TYPE_ATTRIBUTE_STRING_FORMAT_MASK
+        ANSI_CLASS: 0x00000000,            // TYPE_ATTRIBUTE_ANSI_CLASS
+        UNICODE_CLASS: 0x00010000,         // TYPE_ATTRIBUTE_UNICODE_CLASS
+        AUTO_CLASS: 0x00020000,            // TYPE_ATTRIBUTE_AUTO_CLASS
+
+        // 其他属性
+        BEFORE_FIELD_INIT: 0x00100000,     // TYPE_ATTRIBUTE_BEFORE_FIELD_INIT
+        FORWARDER: 0x00200000,             // TYPE_ATTRIBUTE_FORWARDER
+
+        // 保留掩码和特殊名称
+        RESERVED_MASK: 0x00040800,         // TYPE_ATTRIBUTE_RESERVED_MASK
+        RT_SPECIAL_NAME: 0x00000800,       // TYPE_ATTRIBUTE_RT_SPECIAL_NAME
+        HAS_SECURITY: 0x00040000,          // TYPE_ATTRIBUTE_HAS_SECURITY
+
+        // 字段属性
+        FIELD_ACCESS_MASK: 0x0007,         // FIELD_ATTRIBUTE_FIELD_ACCESS_MASK
+        FIELD_PRIVATE: 0x0001,             // FIELD_ATTRIBUTE_PRIVATE
+        FIELD_FAM_AND_ASSEM: 0x0002,       // FIELD_ATTRIBUTE_FAM_AND_ASSEM
+        FIELD_ASSEMBLY: 0x0003,            // FIELD_ATTRIBUTE_ASSEMBLY
+        FIELD_FAMILY: 0x0004,              // FIELD_ATTRIBUTE_FAMILY
+        FIELD_FAM_OR_ASSEM: 0x0005,        // FIELD_ATTRIBUTE_FAM_OR_ASSEM
+        FIELD_PUBLIC: 0x0006,              // FIELD_ATTRIBUTE_PUBLIC
+        FIELD_STATIC: 0x0010,              // FIELD_ATTRIBUTE_STATIC
+        FIELD_INIT_ONLY: 0x0020,           // FIELD_ATTRIBUTE_INIT_ONLY
+        FIELD_LITERAL: 0x0040,             // FIELD_ATTRIBUTE_LITERAL
+        FIELD_NOT_SERIALIZED: 0x0080,      // FIELD_ATTRIBUTE_NOT_SERIALIZED
+        FIELD_SPECIAL_NAME: 0x0200,        // FIELD_ATTRIBUTE_SPECIAL_NAME
+        FIELD_PINVOKE_IMPL: 0x2000,        // FIELD_ATTRIBUTE_PINVOKE_IMPL
+
+        // 方法实现属性
+        METHOD_IMPL_CODE_TYPE_MASK: 0x0003, // METHOD_IMPL_ATTRIBUTE_CODE_TYPE_MASK
+        METHOD_IMPL_IL: 0x0000,             // METHOD_IMPL_ATTRIBUTE_IL
+        METHOD_IMPL_NATIVE: 0x0001,         // METHOD_IMPL_ATTRIBUTE_NATIVE
+        METHOD_IMPL_OPTIL: 0x0002,          // METHOD_IMPL_ATTRIBUTE_OPTIL
+        METHOD_IMPL_RUNTIME: 0x0003,        // METHOD_IMPL_ATTRIBUTE_RUNTIME
+        METHOD_IMPL_MANAGED_MASK: 0x0004,   // METHOD_IMPL_ATTRIBUTE_MANAGED_MASK
+        METHOD_IMPL_UNMANAGED: 0x0004,      // METHOD_IMPL_ATTRIBUTE_UNMANAGED
+        METHOD_IMPL_MANAGED: 0x0000,        // METHOD_IMPL_ATTRIBUTE_MANAGED
+        METHOD_IMPL_FORWARD_REF: 0x0010,    // METHOD_IMPL_ATTRIBUTE_FORWARD_REF
+        METHOD_IMPL_PRESERVE_SIG: 0x0080,   // METHOD_IMPL_ATTRIBUTE_PRESERVE_SIG
+        METHOD_IMPL_INTERNAL_CALL: 0x1000,  // METHOD_IMPL_ATTRIBUTE_INTERNAL_CALL
+        METHOD_IMPL_SYNCHRONIZED: 0x0020,    // METHOD_IMPL_ATTRIBUTE_SYNCHRONIZED
+        METHOD_IMPL_NOINLINING: 0x0008,     // METHOD_IMPL_ATTRIBUTE_NOINLINING
+
+        // 方法属性
+        METHOD_ACCESS_MASK: 0x0007,         // METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK
+        METHOD_PRIVATE: 0x0001,             // METHOD_ATTRIBUTE_PRIVATE
+        METHOD_FAM_AND_ASSEM: 0x0002,       // METHOD_ATTRIBUTE_FAM_AND_ASSEM
+        METHOD_ASSEM: 0x0003,               // METHOD_ATTRIBUTE_ASSEM
+        METHOD_FAMILY: 0x0004,              // METHOD_ATTRIBUTE_FAMILY
+        METHOD_FAM_OR_ASSEM: 0x0005,        // METHOD_ATTRIBUTE_FAM_OR_ASSEM
+        METHOD_PUBLIC: 0x0006,              // METHOD_ATTRIBUTE_PUBLIC
+        METHOD_STATIC: 0x0010,              // METHOD_ATTRIBUTE_STATIC
+        METHOD_FINAL: 0x0020,               // METHOD_ATTRIBUTE_FINAL
+        METHOD_VIRTUAL: 0x0040,             // METHOD_ATTRIBUTE_VIRTUAL
+        METHOD_HIDE_BY_SIG: 0x0080,         // METHOD_ATTRIBUTE_HIDE_BY_SIG
+        METHOD_VTABLE_LAYOUT_MASK: 0x0100,  // METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK
+        METHOD_REUSE_SLOT: 0x0000,          // METHOD_ATTRIBUTE_REUSE_SLOT
+        METHOD_NEW_SLOT: 0x0100,            // METHOD_ATTRIBUTE_NEW_SLOT
+        METHOD_STRICT: 0x0200,              // METHOD_ATTRIBUTE_STRICT
+        METHOD_ABSTRACT: 0x0400,            // METHOD_ATTRIBUTE_ABSTRACT
+        METHOD_SPECIAL_NAME: 0x0800,        // METHOD_ATTRIBUTE_SPECIAL_NAME
+
+        // 参数属性
+        PARAM_IN: 0x0001,                   // PARAM_ATTRIBUTE_IN
+        PARAM_OUT: 0x0002,                  // PARAM_ATTRIBUTE_OUT
+        PARAM_OPTIONAL: 0x0010,             // PARAM_ATTRIBUTE_OPTIONAL
+        PARAM_RESERVED_MASK: 0xf000,        // PARAM_ATTRIBUTE_RESERVED_MASK
+        PARAM_HAS_DEFAULT: 0x1000,          // PARAM_ATTRIBUTE_HAS_DEFAULT
+        PARAM_HAS_FIELD_MARSHAL: 0x2000,    // PARAM_ATTRIBUTE_HAS_FIELD_MARSHAL
+
+        // 泛型参数属性
+        GENERIC_PARAM_NON_VARIANT: 0x00,    // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_NON_VARIANT
+        GENERIC_PARAM_COVARIANT: 0x01,      // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_COVARIANT
+        GENERIC_PARAM_CONTRAVARIANT: 0x02,  // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_CONTRAVARIANT
+        GENERIC_PARAM_VARIANCE_MASK: 0x03,  // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_VARIANCE_MASK
+        GENERIC_PARAM_REF_TYPE_CONSTRAINT: 0x04, // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_REFERENCE_TYPE_CONSTRAINT
+        GENERIC_PARAM_NOT_NULLABLE_VALUE_TYPE_CONSTRAINT: 0x08, // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_NOT_NULLABLE_VALUE_TYPE_CONSTRAINT
+        GENERIC_PARAM_DEFAULT_CTOR_CONSTRAINT: 0x10, // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_DEFAULT_CONSTRUCTOR_CONSTRAINT
+        GENERIC_PARAM_SPECIAL_CONSTRAINT_MASK: 0x1C, // IL2CPP_GENERIC_PARAMETER_ATTRIBUTE_SPECIAL_CONSTRAINT_MASK
+
+        // 程序集引用属性
+        ASSEMBLYREF_FULL_PUBLIC_KEY: 0x00000001,    // ASSEMBLYREF_FULL_PUBLIC_KEY_FLAG
+        ASSEMBLYREF_RETARGETABLE: 0x00000100,       // ASSEMBLYREF_RETARGETABLE_FLAG
+        ASSEMBLYREF_ENABLEJITCOMPILE_TRACKING: 0x00008000,  // ASSEMBLYREF_ENABLEJITCOMPILE_TRACKING_FLAG
+        ASSEMBLYREF_DISABLEJITCOMPILE_OPTIMIZER: 0x00004000 // ASSEMBLYREF_DISABLEJITCOMPILE_OPTIMIZER_FLAG
+    } as const;
+
     export enum Visibility {
         Private = "private",
         Family = "protected", // 在 C# 中，`family` 对应 `protected`
         FamilyOrAssembly = "protected internal", // `fam_or_assem`
         FamilyAndAssembly = "private protected", // `fam_and_assem` (C# 7.2+)
-        Public = "public",
+        Public = "public", 
         Internal = "internal", // 默认情况下，假设为 internal
     }
 
-    export function getVisibility(flags: number): Visibility {
-        flags = flags & 0x0007;
-        if (flags & 0x0001) return Visibility.Private;
-        if (flags & 0x0002) return Visibility.FamilyOrAssembly;
-        if (flags & 0x0004) return Visibility.Family;
-        if (flags & 0x0005) return Visibility.FamilyOrAssembly;
-        if (flags & 0x0006) return Visibility.Public;
-        return Visibility.Internal;
+    export function getClassVisibility(flags: number): Visibility {
+        flags = flags & ATTRIBUTES.VISIBILITY_MASK;
+        switch(flags) {
+            case ATTRIBUTES.PUBLIC: // TYPE_ATTRIBUTE_PUBLIC
+            case ATTRIBUTES.NESTED_PUBLIC: // TYPE_ATTRIBUTE_NESTED_PUBLIC
+                return Visibility.Public;
+            case ATTRIBUTES.NOT_PUBLIC: // TYPE_ATTRIBUTE_NOT_PUBLIC
+            case ATTRIBUTES.NESTED_FAM_AND_ASSEM: // TYPE_ATTRIBUTE_NESTED_FAM_AND_ASSEM
+            case ATTRIBUTES.NESTED_ASSEMBLY: // TYPE_ATTRIBUTE_NESTED_ASSEMBLY
+                return Visibility.Internal;
+            case ATTRIBUTES.NESTED_PRIVATE: // TYPE_ATTRIBUTE_NESTED_PRIVATE
+                return Visibility.Private;
+            case ATTRIBUTES.NESTED_FAMILY: // TYPE_ATTRIBUTE_NESTED_FAMILY
+                return Visibility.Family;
+            case ATTRIBUTES.NESTED_FAM_OR_ASSEM: // TYPE_ATTRIBUTE_NESTED_FAM_OR_ASSEM
+                return Visibility.FamilyOrAssembly;
+            default:
+                return Visibility.Internal; // 默认返回 internal
+        }
+    }
+
+    export function getFieldVisibility(flags: number): Visibility {
+        flags = flags & ATTRIBUTES.FIELD_ACCESS_MASK;
+        switch(flags) {
+            case ATTRIBUTES.FIELD_PRIVATE:
+                return Visibility.Private;
+            case ATTRIBUTES.FIELD_PUBLIC:
+                return Visibility.Public;
+            case ATTRIBUTES.FIELD_FAMILY:
+                return Visibility.Family;
+            case ATTRIBUTES.FIELD_ASSEMBLY:
+            case ATTRIBUTES.FIELD_FAM_AND_ASSEM:
+                return Visibility.Internal;
+            case ATTRIBUTES.FIELD_FAM_OR_ASSEM:
+                return Visibility.FamilyOrAssembly;
+            default:
+                return Visibility.Internal;
+        }
+    }
+
+    export function getMethodVisibility(flags: number): Visibility {
+        flags = flags & ATTRIBUTES.METHOD_ACCESS_MASK;
+        switch(flags) {
+            case ATTRIBUTES.METHOD_PRIVATE:
+                return Visibility.Private;
+            case ATTRIBUTES.METHOD_PUBLIC:
+                return Visibility.Public;
+            case ATTRIBUTES.METHOD_FAMILY:
+                return Visibility.Family;
+            case ATTRIBUTES.METHOD_ASSEM:
+            case ATTRIBUTES.METHOD_FAM_AND_ASSEM:
+                return Visibility.Internal;
+            case ATTRIBUTES.METHOD_FAM_OR_ASSEM:
+                return Visibility.FamilyOrAssembly;
+            default:
+                return Visibility.Internal;
+        }
     }
 }
