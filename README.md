@@ -10,6 +10,38 @@ A Frida module to dump, trace or hijack any Il2Cpp application at runtime, witho
 ## Features
 
 -   Dump classes, methods, fields and so on
+    ```ts
+    import "frida-il2cpp-bridge";
+
+    Il2Cpp.perform(() => {
+        Il2Cpp.dump();
+    });
+    ```
+    导出的文件格式仿照其他通用导出工具
+    ```ts
+    //dump.ts
+    for (const assembly of Il2Cpp.domain.assemblies) {
+        //先导出所有的Image文件名
+        file.write(`// Image: ${i++} ${assembly.image.name}\n`);
+    }
+    ```
+    导出文件
+    ```cs
+    // Image: 0 mscorlib.dll
+    // Image: 1 Assembly-CSharp.dll
+    ...
+
+    // Dll : UnityEngine.CoreModule.dll
+    // Namespace: UnityEngine
+    private class TextAsset : Object
+    {
+        
+        protected internal System.Byte[] get_bytes(); // 0x02d94898
+        protected internal System.String get_text(); // 0x02d948d4
+        protected internal System.String ToString(); // 0x02d94bec
+        private static System.String DecodeString(System.Byte[] bytes); // 0x02d94964
+    }
+    ```
 -   Trace, intercept and replace method calls
 -   Mess around with the C# runtime
 -   Il2Cpp structs and global metadata (almost) free
