@@ -64,9 +64,46 @@ namespace Il2Cpp {
                 }
                 result += '\n]'
                 return result;
+            }else if(type.startsWith("System.Collections.Generic.Dictionary")){
+                const count = obj.method("get_Count").invoke() as number;
+                const entries = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
+                const moveNext = entries.method("MoveNext");
+                const current = entries.method("get_Current");
+                
+                let result = '{\n';
+                for (let i = 0; i < count; i++) {
+                    if (i > 0) {
+                        result += ',\n';
+                    }
+                    moveNext.invoke();
+                    const entry = current.invoke() as Il2Cpp.Object;
+                    const key = toJson(entry.field("key").value);
+                    const value = toJson(entry.field("value").value);
+                    result += `  ${key}: ${value}`;
+                }
+                result += '\n}';
+                return result;
             }else{
                 try {
-                    return serializeObject(obj)
+                    var json = serializeObject(obj)
+                    //检查json是否与{}相等
+                    if(json.trim() === '"{}"'){
+                        var result = '{\n'
+                        var initLength = result.length
+                        
+                        obj.class.fields.forEach(_=>{
+                            if(result.length > initLength){
+                                result+=',\n'
+                            }
+                            const field = obj.field(_.name)
+                            const fieldJson = toJson(field.value)
+                            result+=`  ${_.name}: ${fieldJson}`
+                        })
+                        result += '\n}'
+                        return result;
+                    }else{
+                        return json;
+                    }
                 }catch(e){
                     try{
                         return obj.method<Il2Cpp.String>("ToString", 0).invoke().content ?? "ToString null"
