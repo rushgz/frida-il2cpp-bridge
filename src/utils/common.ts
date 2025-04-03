@@ -43,7 +43,11 @@ namespace Il2Cpp {
                 return "null error"
             }
             
-            var type = obj.class.type.name;
+            try {
+                var type = obj.class.type.name;
+            } catch (error) {
+                var type = "unknown"
+            }
             if (type.startsWith("System.Collections.Generic.List")){
                 const size = obj.method("get_Count").invoke() as number
                 var result = '[\n'
@@ -61,7 +65,11 @@ namespace Il2Cpp {
                 try {
                     return serializeObject(obj)
                 }catch(e){
-                    return  obj.method<Il2Cpp.String>("ToString", 0).invoke().content ??"error to Json"
+                    try{
+                        return obj.method<Il2Cpp.String>("ToString", 0).invoke().content ?? "ToString null"
+                    }catch(e){
+                        return "ToString error"
+                    }
                 }
             }
         }else{
