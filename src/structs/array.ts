@@ -69,7 +69,7 @@ namespace Il2Cpp {
 
         /** */
         toString(): string {
-            return this.isNull() ? "null" : `[${this.elements.read(this.length, 0)}]`;
+            return toJson(this);
         }
 
         /** Iterable. */
