@@ -27,6 +27,9 @@ namespace Il2Cpp {
             }
             console.log("to json",  obj.length)
             try {
+                if(obj.length === 0){
+                    return "[]"
+                }
                 var result = '[\n'
                 result += obj.elements.read(obj.length, 0).map(_=>toJson(_)).join(",\n")
                 result += '\n]'
