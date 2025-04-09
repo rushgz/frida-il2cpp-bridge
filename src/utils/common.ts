@@ -97,7 +97,7 @@ namespace Il2Cpp {
                             }
                             const field = obj.field(_.name)
                             const fieldJson = toJson(field.value)
-                            result+=`  ${_.name}: ${fieldJson}`
+                            result+=`  "${_.name}": ${fieldJson}`
                         })
                         result += '\n}'
                         return result;
