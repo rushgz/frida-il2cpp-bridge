@@ -1,6 +1,10 @@
 namespace Il2Cpp {
     const console = (globalThis as any).console
 
+    export function toggleSimplify(isSimplify: boolean){
+        (globalThis as any).SIMPLIFY = isSimplify;
+    }
+
     function serializeObject(obj: any): string {
         try {
             const JsonConvert = Il2Cpp.domain.assembly("Newtonsoft.Json").image.class("Newtonsoft.JsonConvert");
@@ -14,18 +18,24 @@ namespace Il2Cpp {
     }
     
     export function toJson(obj: any): string {
+        const isSimplify = (globalThis as any).SIMPLIFY;
 
         if (obj === null) {
             return "null";
         }else if (obj === undefined) {
             return "undefined";
         }
-    
         if(obj instanceof Il2Cpp.Array){
             if(obj.isNull()){
                 return "null";
             }
-            console.log("to json",  obj.length)
+            try {
+                if (isSimplify){
+                    return serializeObject(obj);
+                }
+            } catch (error) {
+                return "SIMPLIFY error"
+            }
             try {
                 if(obj.length === 0){
                     return "[]"
@@ -83,11 +93,21 @@ namespace Il2Cpp {
                 }
                 result += '\n}';
                 return result;
+            }else if (type.includes("System.Collections.Generic.Stack")) {
+                const enumerator = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
+                var result = '[\n';
+                while (enumerator.method("MoveNext").invoke()) {
+                    const current = enumerator.field("Current").value;
+                    result += toJson(current) + ',\n';
+                }
+                result = result.slice(0, -2);
+                result += '\n]';
+                return result;
             }else{
                 try {
                     var json = serializeObject(obj)
                     //检查json是否与{}相等
-                    if(json.trim() === '"{}"'){
+                    if(!isSimplify && json.trim() === '"{}"'){
                         var result = '{\n'
                         var initLength = result.length
                         
