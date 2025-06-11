@@ -114,4 +114,18 @@ namespace Il2Cpp {
     function createDirectoryRecursively(path: string) {
         Il2Cpp.corlib.class("System.IO.Directory").method("CreateDirectory").invoke(Il2Cpp.string(path));
     }
+    export function writeFile(fileName: string, data: string | ArrayBuffer | number[], path?: string) {
+        path = path ?? Il2Cpp.application.dataPath!;
+
+        createDirectoryRecursively(path);
+
+        const destination = `${path}/${fileName}`;
+        const file = new File(destination, "w");
+        file.write(data)
+        
+
+        file.flush();
+        file.close();
+        ok(`dump saved to ${destination}`);
+    }
 }
