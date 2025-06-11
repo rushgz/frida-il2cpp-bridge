@@ -5,15 +5,26 @@ namespace Il2Cpp {
         (globalThis as any).SIMPLIFY = isSimplify;
     }
 
+    function sliceStr(str: string|null): string{
+        if(str === null){
+            return "null"
+        }
+        if(str.startsWith('"{') && str.endsWith('}"')){
+            return str.slice(1, -1)
+        }else{
+            return str
+        }
+    }
+
     function serializeObject(obj: any): string {
         try {
             const JsonConvert = Il2Cpp.domain.assembly("Newtonsoft.Json").image.class("Newtonsoft.JsonConvert");
             const result = JsonConvert.method("SerializeObject", 1).invoke(obj) as Il2Cpp.String;
-            return result.toString();
+            return sliceStr(result.toString());
         } catch (error) {
             const JsonUtility = Il2Cpp.domain.assembly("UnityEngine.JSONSerializeModule").image.class("UnityEngine.JsonUtility");
             const toJson = JsonUtility.method("ToJson", 2).invoke(obj, true) as Il2Cpp.String;
-            return toJson.toString();
+            return sliceStr(toJson.toString());
         }
     }
     
@@ -70,7 +81,7 @@ namespace Il2Cpp {
                     }
                     const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
                     const dtoJson = toJson(dto)
-                    result+=dtoJson.substring(1, dtoJson.length-1)
+                    result += dtoJson
                 }
                 result += '\n]'
                 return result;
@@ -96,9 +107,14 @@ namespace Il2Cpp {
             }else if (type.includes("System.Collections.Generic.Stack")) {
                 const enumerator = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
                 var result = '[\n';
+                var i = 0;
                 while (enumerator.method("MoveNext").invoke()) {
+                    if (i > 0) {
+                        result += ',\n';
+                    }
                     const current = enumerator.field("Current").value;
-                    result += toJson(current) + ',\n';
+                    result += toJson(current)
+                    i++;
                 }
                 result = result.slice(0, -2);
                 result += '\n]';
@@ -126,7 +142,12 @@ namespace Il2Cpp {
                     }
                 }catch(e){
                     try{
-                        return obj.method<Il2Cpp.String>("ToString", 0).invoke().content ?? "ToString null"
+                        const method = obj.method<Il2Cpp.String>("ToString", 0)
+                        if(method === null){
+                            return sliceStr(obj.toString())
+                        }else{  
+                            return sliceStr(method.invoke().content)
+                        }
                     }catch(e){
                         return "ToString error"
                     }
@@ -134,7 +155,7 @@ namespace Il2Cpp {
             }
         }else{
             try{
-                return obj.toString();
+                return sliceStr(obj.toString());
             }catch(e){
                 return "error toString"
             }
