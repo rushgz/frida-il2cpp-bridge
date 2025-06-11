@@ -6,7 +6,7 @@ namespace Il2Cpp {
             return Il2Cpp.corlib.class("System.Array").instanceSize;
         }
 
-        /** @internal Gets a pointer to the first element of the current array. */
+        /**  Gets a pointer to the first element of the current array. */
         get elements(): Il2Cpp.Pointer<T> {
             // We previosly obtained an array whose content is known by calling
             // 'System.String::Split(NULL)' on a known string. However, that
