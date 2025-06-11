@@ -61,7 +61,7 @@ namespace Il2Cpp {
             } catch (error) {
                 var type = "unknown"
             }
-            if (type.startsWith("System.Collections.Generic.List")){
+            if (type.startsWith("System.Collections.Generic.List") || type.startsWith("System.Collections.Generic.ICollection")){
                 const size = obj.method("get_Count").invoke() as number
                 var result = '[\n'
                 for (let i = 0; i < size; i++) {
@@ -181,4 +181,45 @@ namespace Il2Cpp {
             console.log("已重写Object.ToString方法");
         }
     }
+
+    export function printCollection(obj: Il2Cpp.Array|Il2Cpp.Object, func: Function) {
+        if (obj instanceof Il2Cpp.Array) {
+            return printArray(obj, func);
+        } else if (obj instanceof Il2Cpp.Object) {
+            printList(obj, func);
+        }
+    }
+
+    function printArray(obj: Il2Cpp.Array, func: Function) {
+        try {
+            if (obj.length === 0) {
+                return "[]"
+            }else if (obj.isNull()) {
+                return "null"   
+            }
+            var result = '[\n'
+            result += obj.elements.read(obj.length, 0).map(_ => func(_)).join(",\n")
+            result += '\n]'
+            return result;
+        } catch (e) {
+            return "error"
+        }
+    }
+
+    function printList(obj: Il2Cpp.Object, func: Function) {
+        const size = obj.method("get_Count").invoke() as number
+        var result = '[\n'
+        for (let i = 0; i < size; i++) {
+            if (i > 0) {
+                result += ','
+            }
+            const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
+            const dtoJson = func(dto)
+            result += dtoJson
+        }
+        result += '\n]'
+        return result;
+    }
+
+
 }
