@@ -1,6 +1,9 @@
 namespace Il2Cpp {
     const console = (globalThis as any).console
 
+    // 定义一个字典 key为类名，value为方法名
+    export const classMethodMap: Map<string, Function> = new Map();
+
     export function toggleSimplify(isSimplify: boolean){
         (globalThis as any).SIMPLIFY = isSimplify;
     }
@@ -73,70 +76,76 @@ namespace Il2Cpp {
                 var type = "unknown"
             }
             if (type.startsWith("System.Collections.Generic.List") || type.startsWith("System.Collections.Generic.ICollection")){
-                const size = obj.method("get_Count").invoke() as number
-                var result = '[\n'
-                for (let i = 0; i < size; i++) {
-                    if(i>0){
-                        result+=','
+                try {
+                    const size = obj.method("get_Count").invoke() as number
+                    var result = '[\n'
+                    for (let i = 0; i < size; i++) {
+                        if(i>0){
+                            result+=','
+                        }
+                        const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
+                        const dtoJson = toJson(dto)
+                        result += dtoJson
                     }
-                    const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
-                    const dtoJson = toJson(dto)
-                    result += dtoJson
+                    result += '\n]'
+                    return result;
+                } catch (error) {
+                    return "List error"
                 }
-                result += '\n]'
-                return result;
             }else if(type.startsWith("System.Collections.Generic.Dictionary")){
-                const count = obj.method("get_Count").invoke() as number;
-                const entries = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
-                const moveNext = entries.method("MoveNext");
-                const current = entries.method("get_Current");
-                
-                let result = '{\n';
-                for (let i = 0; i < count; i++) {
-                    if (i > 0) {
-                        result += ',\n';
+                try {
+                    const count = obj.method("get_Count").invoke() as number;
+                    const entries = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
+                    const moveNext = entries.method("MoveNext");
+                    const current = entries.method("get_Current");
+                    
+                    let result = '{\n';
+                    for (let i = 0; i < count; i++) {
+                        if (i > 0) {
+                            result += ',\n';
+                        }
+                        moveNext.invoke();
+                        const entry = current.invoke() as Il2Cpp.Object;
+                        const key = toJson(entry.field("key").value);
+                        const value = toJson(entry.field("value").value);
+                        result += `  ${key}: ${value}`;
                     }
-                    moveNext.invoke();
-                    const entry = current.invoke() as Il2Cpp.Object;
-                    const key = toJson(entry.field("key").value);
-                    const value = toJson(entry.field("value").value);
-                    result += `  ${key}: ${value}`;
+                    result += '\n}';
+                    return result;
+                    
+                } catch (error) {
+                    return "Dictionary error"
                 }
-                result += '\n}';
-                return result;
             }else if (type.includes("System.Collections.Generic.Stack")) {
-                const enumerator = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
-                var result = '[\n';
-                var i = 0;
-                while (enumerator.method("MoveNext").invoke()) {
-                    if (i > 0) {
-                        result += ',\n';
+                try {
+                    const enumerator = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
+                    var result = '[\n';
+                    var i = 0;
+                    while (enumerator.method("MoveNext").invoke()) {
+                        if (i > 0) {
+                            result += ',\n';
+                        }
+                        const current = enumerator.field("Current").value;
+                        result += toJson(current)
+                        i++;
                     }
-                    const current = enumerator.field("Current").value;
-                    result += toJson(current)
-                    i++;
+                    result = result.slice(0, -2);
+                    result += '\n]';
+                    return result;
+                } catch (error) {
+                    return "Stack error"
                 }
-                result = result.slice(0, -2);
-                result += '\n]';
-                return result;
             }else{
                 try {
+                    const clazz = obj.class;
+                    const func = classMethodMap.get(clazz.fullName);
+                    if(func){
+                        return func(obj) as string;
+                    }
                     var json = serializeObject(obj)
                     //检查json是否与{}相等
                     if(!isSimplify && json.trim() === '"{}"'){
-                        var result = '{\n'
-                        var initLength = result.length
-                        
-                        obj.class.fields.forEach(_=>{
-                            if(result.length > initLength){
-                                result+=',\n'
-                            }
-                            const field = obj.field(_.name)
-                            const fieldJson = toJson(field.value)
-                            result+=`  "${_.name}": ${fieldJson}`
-                        })
-                        result += '\n}'
-                        return result;
+                        return printObject(obj);
                     }else{
                         return json;
                     }
@@ -160,6 +169,28 @@ namespace Il2Cpp {
                 return "error toString"
             }
         }
+    }
+
+    export function printObject(object: Il2Cpp.Object): string {
+        let result = "{\n";
+        let first = true;
+        object.class.fields.forEach(field => {
+            
+            if (first) {
+                first = false;
+            }else{
+                result += ",\n";
+            }
+            
+            try {
+                const value = object.field(field.name).value;
+                result += `"${field.name}": ${value}`
+            } catch (error) {
+                result += `"${field.name}": ${field.isStatic ? "static" : "error"}`
+            }
+        });
+        result += "}";
+        return result;
     }
     
     export function overloadToString(assemblyName: string, className: string){
@@ -203,15 +234,17 @@ namespace Il2Cpp {
         }
     }
 
-    export function printCollection(obj: Il2Cpp.Array|Il2Cpp.Object, func: Function) {
+    export function printCollection(obj: Il2Cpp.Array|Il2Cpp.Object, func: Function): string {
         if (obj instanceof Il2Cpp.Array) {
             return printArray(obj, func);
         } else if (obj instanceof Il2Cpp.Object) {
-            printList(obj, func);
+            return printList(obj, func);
+        }else{
+            return "collection error"
         }
     }
 
-    function printArray(obj: Il2Cpp.Array, func: Function) {
+    function printArray(obj: Il2Cpp.Array, func: Function): string {
         try {
             if (obj.length === 0) {
                 return "[]"
@@ -227,7 +260,7 @@ namespace Il2Cpp {
         }
     }
 
-    function printList(obj: Il2Cpp.Object, func: Function) {
+    function printList(obj: Il2Cpp.Object, func: Function): string {
         const size = obj.method("get_Count").invoke() as number
         var result = '[\n'
         for (let i = 0; i < size; i++) {
