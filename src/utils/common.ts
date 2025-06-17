@@ -83,7 +83,7 @@ namespace Il2Cpp {
                         if(i>0){
                             result+=','
                         }
-                        const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
+                        const dto = obj.method("System.Collections.IList.get_Item").invoke(i) as Il2Cpp.Object;
                         const dtoJson = toJson(dto)
                         result += dtoJson
                     }
@@ -95,9 +95,9 @@ namespace Il2Cpp {
             }else if(type.startsWith("System.Collections.Generic.Dictionary")){
                 try {
                     const count = obj.method("get_Count").invoke() as number;
-                    const entries = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
+                    const entries = obj.method("System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey,TValue>>.GetEnumerator").invoke() as Il2Cpp.Object;
                     const moveNext = entries.method("MoveNext");
-                    const current = entries.method("get_Current");
+                    const current = entries.method("System.Collections.IEnumerator.get_Current");
                     
                     let result = '{\n';
                     for (let i = 0; i < count; i++) {
@@ -108,7 +108,7 @@ namespace Il2Cpp {
                         const entry = current.invoke() as Il2Cpp.Object;
                         const key = toJson(entry.field("key").value);
                         const value = toJson(entry.field("value").value);
-                        result += `  ${key}: ${value}`;
+                        result += `  "${key}": ${value}`;
                     }
                     result += '\n}';
                     return result;
@@ -118,14 +118,14 @@ namespace Il2Cpp {
                 }
             }else if (type.includes("System.Collections.Generic.Stack")) {
                 try {
-                    const enumerator = obj.method("GetEnumerator").invoke() as Il2Cpp.Object;
+                    const enumerator = obj.method("System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey,TValue>>.GetEnumerator").invoke() as Il2Cpp.Object;
                     var result = '[\n';
                     var i = 0;
                     while (enumerator.method("MoveNext").invoke()) {
                         if (i > 0) {
                             result += ',\n';
                         }
-                        const current = enumerator.field("Current").value;
+                        const current = enumerator.field("System.Collections.IEnumerator.get_Current").value;
                         result += toJson(current)
                         i++;
                     }
@@ -184,9 +184,17 @@ namespace Il2Cpp {
             
             try {
                 const value = object.field(field.name).value;
-                result += `"${field.name}": ${value}`
+                result += `  "${field.name}": ${value}`
             } catch (error) {
-                result += `"${field.name}": ${field.isStatic ? "static" : "error"}`
+                if(field.isStatic){
+                    try {
+                        result += `  "${field.name}": ${object.class.field(field.name).value}`
+                    } catch (error) {
+                        result += `  "${field.name}": static`
+                    }
+                }else{
+                    result += `"  ${field.name}": error`
+                }
             }
         });
         result += "}";
@@ -267,7 +275,7 @@ namespace Il2Cpp {
             if (i > 0) {
                 result += ','
             }
-            const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
+            const dto = obj.method("System.Collections.IList.get_Item").invoke(i) as Il2Cpp.Object;
             const dtoJson = func(dto)
             result += dtoJson
         }
