@@ -117,13 +117,13 @@ namespace Il2Cpp {
         raise(`couldn't write value ${value} to ${pointer} using an unhandled or unknown type ${type.name} (${type.typeEnum}), please file an issue`);
     }
 
-    /** @internal */
+    /** @public */
     export function fromFridaValue(value: NativeCallbackArgumentValue, type: Il2Cpp.Type): Il2Cpp.Parameter.Type;
 
-    /** @internal */
+    /** @public */
     export function fromFridaValue(value: NativeFunctionReturnValue, type: Il2Cpp.Type): Il2Cpp.Method.ReturnType;
 
-    /** @internal */
+    /** @public */
     export function fromFridaValue(
         value: NativeCallbackArgumentValue | NativeFunctionReturnValue,
         type: Il2Cpp.Type
