@@ -117,10 +117,20 @@ namespace Il2Cpp {
         return UnityVersion.lt(unityVersion, "2021.2.0");
     }, lazy);
 
+    function call(method: string): string | null {
+        try {
+            const Application = Il2Cpp.domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application");
+            const result = Application.method(method).invoke() as Il2Cpp.String;
+            return result?.content;
+        } catch {
+            return null;
+        }
+    }
+
     function unityEngineCall(method: string): string | null {
         const handle = Il2Cpp.exports.resolveInternalCall(Memory.allocUtf8String("UnityEngine.Application::" + method));
         const nativeFunction = new NativeFunction(handle, "pointer", []);
 
-        return nativeFunction.isNull() ? null : new Il2Cpp.String(nativeFunction()).asNullable()?.content ?? null;
+        return nativeFunction.isNull() ? call(method) : new Il2Cpp.String(nativeFunction()).asNullable()?.content ?? null;
     }
 }

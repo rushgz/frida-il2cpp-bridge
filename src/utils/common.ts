@@ -8,7 +8,7 @@ namespace Il2Cpp {
         (globalThis as any).SIMPLIFY = isSimplify;
     }
 
-    function sliceStr(str: string | null): string {
+    export function sliceStr(str: string | null): string {
         if (str === null) {
             return "null"
         }
@@ -19,7 +19,7 @@ namespace Il2Cpp {
         }
     }
 
-    function serializeObject(obj: any): string {
+    export function serializeObject(obj: any): string {
         try {
             const JsonConvert = Il2Cpp.domain.assembly("Newtonsoft.Json").image.class("Newtonsoft.JsonConvert");
             const result = JsonConvert.method("SerializeObject", 1).invoke(obj) as Il2Cpp.String;
@@ -79,8 +79,12 @@ namespace Il2Cpp {
             } catch (error) {
                 var type = "unknown"
             }
-            if(obj.class.isEnum){
-                return obj.field("value__").value.toString();
+            try {
+                if(obj.class.isEnum){
+                    return obj.field("value__").value.toString();
+                }
+            } catch (error) {
+                
             }
             if (type.startsWith("System.Collections.Generic.List") || type.startsWith("System.Collections.Generic.ICollection")) {
                 try {
@@ -88,19 +92,19 @@ namespace Il2Cpp {
                 } catch (error) {
                     return "List error" + (error as any).message
                 }
+            } else if (type.includes("System.Collections.Generic.Stack") || type.includes("System.Collections.Generic.Queue") || type.startsWith("System.Collections.Generic.Dictionary.KeyCollection") || type.startsWith("System.Collections.Generic.Dictionary.ValueCollection")) {
+                try {
+                    return printQueue(obj, toJson);
+                } catch (error) {
+                    return "Stack error" + (error as any).message
+                }
             } else if (type.startsWith("System.Collections.Generic.Dictionary")) {
                 try {
                     return printDictionary(obj, toJson);
                 } catch (error) {
                     return "Dictionary error" + (error as any).message
                 }
-            } else if (type.includes("System.Collections.Generic.Stack") || type.includes("System.Collections.Generic.Queue")) {
-                try {
-                    return printQueue(obj, toJson);
-                } catch (error) {
-                    return "Stack error" + (error as any).message
-                }
-            } else if (type.includes("System.Collections.Generic.HashSet")) {
+            }else if (type.includes("System.Collections.Generic.HashSet")) {
                 try {
                     return printHashSet(obj, toJson);
                 } catch (error) {
@@ -219,9 +223,10 @@ namespace Il2Cpp {
         if (obj instanceof Il2Cpp.Array) {
             return printArray(obj, func, limit);
         } else if (obj instanceof Il2Cpp.Object) {
-            if (obj.class.type.name.startsWith("System.Collections.Generic.Queue")) {
+            const type = obj.class.type.name;
+            if (type.includes("System.Collections.Generic.Stack") || type.includes("System.Collections.Generic.Queue") || type.startsWith("System.Collections.Generic.Dictionary.KeyCollection") || type.startsWith("System.Collections.Generic.Dictionary.ValueCollection")) {
                 return printQueue(obj, func, limit);
-            } else if (obj.class.type.name.startsWith("System.Collections.Generic.HashSet")) {
+            } else if (type.startsWith("System.Collections.Generic.HashSet")) {
                 return printHashSet(obj, func, limit);
             }
             return printList(obj, func, limit);
@@ -254,7 +259,12 @@ namespace Il2Cpp {
                 result += ','
             }
             //System.Collections.IList.get_Item
-            const dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
+            let dto
+            try{
+                dto = obj.method("get_Item").invoke(i) as Il2Cpp.Object;
+            } catch (e) {
+                dto = obj.method("System.Collections.IList.get_Item").invoke(i) as Il2Cpp.Object;
+            }
             const dtoJson = func(dto)
             result += dtoJson
         }
@@ -315,9 +325,22 @@ namespace Il2Cpp {
         return result;
     }
 
-    function printDictionary(obj: Il2Cpp.Object, func: Function, limit?: number): string {
+    export function printDictionary(obj: Il2Cpp.Object, func: Function, limit?: number): string {
         const count = obj.method("get_Count").invoke() as number;
-        const entries = obj.method("System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey,TValue>>.GetEnumerator").invoke() as Il2Cpp.Object;
+        let GetEnumerator: Il2Cpp.Method | null = null;
+        const methods = ["System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey,TValue>>.GetEnumerator", 
+            "System.Collections.IEnumerable.GetEnumerator",
+            "System.Collections.IDictionary.GetEnumerator"];
+        for (const methodName of methods) {
+            GetEnumerator = obj.class.method(methodName);
+            if (GetEnumerator) {
+                break;
+            }
+        }
+        if (!GetEnumerator) {
+            throw new Error("无法找到GetEnumerator方法");
+        }
+        const entries = obj.method(GetEnumerator.name).invoke() as Il2Cpp.Object;
         const moveNext = entries.method("MoveNext");
         const current = entries.method("System.Collections.IEnumerator.get_Current");
 
