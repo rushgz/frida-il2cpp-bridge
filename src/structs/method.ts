@@ -367,12 +367,36 @@ namespace Il2Cpp {
 
         /** */
         toString(): string {
-            return `${this.visibility} \
-${this.isStatic ? `static ` : ``}\
-${this.returnType.name} \
-${this.name}\
-(${this.parameters.join(`, `)});\
-${this.virtualAddress.isNull() ? `` : ` // 0x${this.relativeVirtualAddress.toString(16).padStart(8, `0`)}`}`;
+            let output = "";
+
+            // RVA 和 VA 地址注释
+            if (this.virtualAddress.isNull()) {
+                output += "\t// RVA: 0x VA: 0x0\n";
+            } else {
+                output += `\t// RVA: 0x${this.relativeVirtualAddress.toString(16)} VA: 0x${this.virtualAddress.toString(16)}\n`;
+            }
+
+            // 方法签名
+            output += `\t${Il2Cpp.getMethodModifiers(this.flags, this.implementationFlags)}`;
+            output += `${this.returnType.name} ${this.name}(`;
+
+            // 参数列表
+            const params = this.parameters.map(p => {
+                let paramStr = "";
+                // 检查参数的 byref 和 in/out 属性
+                if (p.type.isByReference) {
+                    // 这里需要检查参数属性,但当前 Parameter 类可能没有 attrs
+                    // 暂时简化处理
+                    paramStr += "ref ";
+                }
+                paramStr += `${p.type.name} ${p.name}`;
+                return paramStr;
+            });
+
+            output += params.join(", ");
+            output += ") { }";
+
+            return output;
         }
 
         /**

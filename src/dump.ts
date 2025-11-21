@@ -49,16 +49,22 @@ namespace Il2Cpp {
 
         const destination = `${path}/${fileName}`;
         const file = new File(destination, "w");
+
+        // 写入 Image 索引
         var i = 0;
         for (const assembly of Il2Cpp.domain.assemblies) {
-            file.write(`// Image: ${i++} ${assembly.image.name}\n`);
+            file.write(`// Image ${i++}: ${assembly.image.name}\n`);
         }
-        file.write("\n")
+        file.write("\n");
+
+        // 写入每个类的详细信息
         for (const assembly of Il2Cpp.domain.assemblies) {
             inform(`dumping ${assembly.name}...`);
 
             for (const klass of assembly.image.classes) {
-                file.write(`${klass}\n\n`);
+                // 每个类前添加 Dll 注释
+                file.write(`\n// Dll : ${assembly.image.name}`);
+                file.write(`${klass}\n`);
             }
         }
 

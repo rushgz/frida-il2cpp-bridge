@@ -118,13 +118,40 @@ namespace Il2Cpp {
 
         /** */
         toString(): string {
-            return `${this.visibility} \
-${this.isThreadStatic ? `[ThreadStatic] ` : ``}\
-${this.isStatic ? `static ` : ``}\
-${this.type.name} \
-${this.name}\
-${this.isLiteral ? ` = ${this.type.class.isEnum ? read((this.value as Il2Cpp.ValueType).handle, this.type.class.baseType!) : this.value}` : ``};\
-${this.isThreadStatic || this.isLiteral ? `` : ` // 0x${this.offset.toString(16)}`}`;
+            let output = "\t";
+
+            // 访问修饰符
+            output += `${this.visibility} `;
+
+            // const 或 static/readonly
+            if (this.isLiteral) {
+                output += "const ";
+            } else {
+                if (this.isStatic) {
+                    output += "static ";
+                }
+                if ((this.flags & Il2Cpp.Field.Attributes.InitOnly) != 0) {
+                    output += "readonly ";
+                }
+            }
+
+            // 类型和名称
+            output += `${this.type.name} ${this.name}`;
+
+            // 枚举的字面量值
+            if (this.isLiteral && this.class.isEnum) {
+                try {
+                    const val = this.class.field(this.name).value;
+                    output += ` = ${val}`;
+                } catch (e) {
+                    // 如果获取值失败,忽略
+                }
+            }
+
+            // 偏移量
+            output += `; // 0x${this.offset.toString(16)}`;
+
+            return output;
         }
 
         /**

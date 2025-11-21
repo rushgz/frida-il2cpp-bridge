@@ -325,20 +325,77 @@ namespace Il2Cpp {
 
         /** */
         toString(): string {
-            const inherited = [this.parent].concat(this.interfaces);
+            let output = "";
 
-            return `\
-// Dll : ${this.assemblyName}.dll\n\
-// Namespace: ${this.namespace}\n\
-${this.visibility} \
-${this.modifier ? this.modifier :''}\
-${this.isEnum ? `enum` : this.isStruct ? `struct` : this.isInterface ? `interface` : `class`} \
-${this.name}\
-${inherited ? ` : ${inherited.map(_ => _?.name).join(`, `)}` : ``}
-{
-    ${this.fields.join(`\n    `)}
-    ${this.methods.join(`\n    `)}
-}`;
+            // Namespace 注释
+            output += `\n// Namespace: ${this.namespace}\n`;
+
+            // 类型属性 (如 [Serializable])
+            const TYPE_ATTRIBUTE_SERIALIZABLE = 0x00002000;
+            if (this.flags & TYPE_ATTRIBUTE_SERIALIZABLE) {
+                output += "[Serializable]\n";
+            }
+
+            // 访问修饰符和类型修饰符
+            output += `${this.visibility} `;
+            output += `${this.modifier}`;
+
+            // 类型关键字
+            if (this.isInterface) {
+                output += "interface ";
+            } else if (this.isEnum) {
+                output += "enum ";
+            } else if (this.isStruct) {
+                output += "struct ";
+            } else {
+                output += "class ";
+            }
+
+            // 类名
+            output += this.name;
+
+            // 继承和接口
+            const baseTypes: string[] = [];
+            const IL2CPP_TYPE_OBJECT = 0x1c;
+
+            if (!this.isValueType && !this.isEnum && this.parent) {
+                if (this.parent.type.handle.readU8() != IL2CPP_TYPE_OBJECT) {
+                    baseTypes.push(this.parent.name);
+                }
+            }
+
+            for (const itf of this.interfaces) {
+                baseTypes.push(itf.name);
+            }
+
+            if (baseTypes.length > 0) {
+                output += " : " + baseTypes.join(", ");
+            }
+
+            output += "\n{\n";
+
+            // Fields 部分
+            if (this.fields.length > 0) {
+                output += "\n\t// Fields\n";
+                for (const field of this.fields) {
+                    output += field.toString() + "\n";
+                }
+            }
+
+            // Properties 部分 (暂时跳过,因为当前项目没有 Property API)
+            // TODO: 添加 Properties 支持
+
+            // Methods 部分
+            if (this.methods.length > 0) {
+                output += "\n\t// Methods\n";
+                for (const method of this.methods) {
+                    output += method.toString() + "\n";
+                }
+            }
+
+            output += "}";
+
+            return output;
         }
 
         /** Executes a callback for every defined class. */
